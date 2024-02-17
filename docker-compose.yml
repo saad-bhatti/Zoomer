@@ -1,31 +1,22 @@
 version: "3.8"
 services:
-  frontend:
-    container_name: frontend
-    stdin_open: true
-    tty: true
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - 3000:3000
-    volumes:
-      - /frontend/node_modules
-      - ./frontend:/frontend
-    environment:
-      - PORT=80
-      - CHOKIDAR_USEPOLLING=true
+  
   apigateway:
     container_name: apigateway
     build:
       context: ./ApiGateway
       dockerfile: Dockerfile
+    depends_on:
+      - locationmicroservice
+      - tripinfomicroservice
+      - usermicroservice
     ports:
       - 8004:8000
+  
   locationmicroservice:
     container_name: locationmicroservice
     build: 
-        context: ./locationmicroservice
+        context: ./LocationMicroservice
         dockerfile: Dockerfile
     depends_on:
       - neo4j
@@ -33,17 +24,7 @@ services:
       - "8000:8000"
     environment:
       - NEO4J_ADDR=neo4j
-  usermicroservice:
-    container_name: usermicroservice
-    build: 
-        context: ./UserMicroservice
-        dockerfile: Dockerfile
-    depends_on:
-      - postgres
-    ports:
-      - "8001:8000"
-    environment:
-      - POSTGRES_ADDR=postgres
+  
   tripinfomicroservice:
     container_name: tripinfomicroservice
     build: 
@@ -55,6 +36,19 @@ services:
       - "8002:8000"
     environment:
       - MONGODB_ADDR=mongodb
+
+    usermicroservice:
+    container_name: usermicroservice
+    build: 
+        context: ./UserMicroservice
+        dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    ports:
+      - "8001:8000"
+    environment:
+      - POSTGRES_ADDR=postgres
+  
   mongodb:
     container_name: mongodb
     image: mongo
@@ -64,6 +58,7 @@ services:
       MONGO_INITDB_DATABASE: trip
     ports:
       - "27017:27017"
+  
   postgres:
     container_name: postgres
     build:
@@ -74,6 +69,7 @@ services:
       POSTGRES_USER: root
     ports:
       - "5432:5432"
+  
   neo4j:
     container_name: neo4j
     image: neo4j:latest
